@@ -8,6 +8,12 @@ import (
 	"sync"
 )
 
+// The gdb command to be run, as passed to os.exec.Command. Can be a
+// plain name, which will be looked up in $PATH, or a full path to run a
+// specific gdb executable. Is used by gdb.New, so should be changed
+// before calling that.
+var GdbCommand = "gdb"
+
 // Gdb represents a GDB instance. It implements the ReadWriter interface to
 // read/write data from/to the target program's TTY.
 type Gdb struct {
@@ -44,7 +50,7 @@ func New(onNotification NotificationCallback) (*Gdb, error) {
 	gdb.pts = pts
 
 	// create GDB command
-	gdb.cmd = exec.Command("gdb", "--nx", "--quiet", "--interpreter=mi2", "--tty", pts.Name())
+	gdb.cmd = exec.Command(GdbCommand, "--nx", "--quiet", "--interpreter=mi2", "--tty", pts.Name())
 
 	// GDB standard input
 	stdin, err := gdb.cmd.StdinPipe()
