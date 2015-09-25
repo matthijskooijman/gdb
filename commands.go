@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"errors"
 )
 
 // NotificationCallback is a callback used to report the notifications that GDB
@@ -45,6 +46,19 @@ func (gdb *Gdb) Send(operation string, arguments ...string) (map[string]interfac
 	gdb.mutex.Lock()
 	delete(gdb.pending, sequence)
 	gdb.mutex.Unlock()
+	// If the class is error, payload is a map that contains a "msg"
+	// element that is a string, return it as an error. Otherwise,
+	// if class is error, String the entire result and use it as the
+	// error.
+	if result["class"] == "error" {
+		var err interface{} = result
+		if payload, isMap := result["payload"].(map[string]interface{}); isMap {
+			if msg, hasMsg := payload["msg"]; hasMsg {
+				err = msg
+			}
+		}
+		return result, errors.New(fmt.Sprint(err))
+	}
 	return result, nil
 }
 
